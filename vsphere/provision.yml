@@ -1,0 +1,10 @@
+---
+- name: Provision VM
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  asks:
+    - name: Display target environment
+      ansible.builtin.debug:
+        msg: "Running AAP configuration for environment: {{ target_env }}"
