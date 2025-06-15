@@ -7,3 +7,5 @@ Platform configuration, environment specific settings.
 This repository includes:
 - Environment common variables.
 - Playbook specific variables for Job templates.
+
+Changes in readme file for testing purposes.
