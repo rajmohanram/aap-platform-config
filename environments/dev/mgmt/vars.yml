@@ -3,3 +3,4 @@
 vcenter_url: "https://vcenter-mgmt.dev.example.com"
 vcenter_username: "administrator@vsphere.local"
 vcenter_password: "{{ lookup('env', 'VCENTER_PASSWORD') }}"
+new_vm_template: "dev-mgmt-template"

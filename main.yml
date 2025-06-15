@@ -5,14 +5,39 @@
   gather_facts: false
   vars_files:
     - "common/vars.yml"
-    - "dev/{{ env }}/{{ cluster }}/vars.yml"
 
-  tasks:
-    - name: Launching job {{ job_template }} for {{ env }} -  {{ cluster }} environment
-      ansible.builtin.include_role:
-        name: infra.aap_configuration.controller_job_launch
+  pre_tasks:
+    - name: "Ensure required variables are set"
+      ansible.builtin.assert:
+        that:
+          - env is defined
+          - cluster is defined
+          - job_template is defined
+        fail_msg: "Environment, cluster, and job template must be specified."
+
+    - name: Include cluster environment variables
+      ansible.builtin.include_vars:
+        file: "environments/{{ env }}/{{ cluster }}/vars.yml"
+        name: cluster_vars
+
+    - name: Include job template variables
+      ansible.builtin.include_vars:
+        file: "environments/{{ env }}/{{ cluster }}/{{ job_template }}.yml"
+        name: job_vars
+
+    - name: Set job extra vars
+      ansible.builtin.set_fact:
+        job_extra_vars: "{{ job_vars | default({}) | combine(cluster_vars | default({})) }}"
+
+    - name: Debug variables
+      ansible.builtin.debug:
+        var: vars
+
+  roles:
+    - role: infra.aap_configuration.controller_job_launch
       vars:
-        name: "{{ job_template }}"
-        organization: "{{ organization }}"
-        extra_vars: "{{ extra_vars | default({}) }}"
-        wait: true
+        controller_launch_jobs:
+          - name: "{{ job_template }}"
+            organization: "{{ organization }}"
+            extra_vars: "{{ job_extra_vars }}"
+            wait: true
