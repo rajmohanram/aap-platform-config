@@ -36,14 +36,14 @@ jobs:
           echo "Event: ${{ github.event_name }}"
           echo "Ref: ${{ github.ref }}"
 
-          # Determine the comparison range based on event type (pull_request or push)
+          # Determine relevant changed files based on event type (pull_request or push)
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             # For pull requests, compare against the target branch
             BASE_SHA="${{ github.event.pull_request.base.sha }}"
             HEAD_SHA="${{ github.event.pull_request.head.sha }}"
             echo "Comparing PR changes: $BASE_SHA..$HEAD_SHA"
             CHANGED_FILES=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
-          else
+          elif [ "${{ github.event_name }}" == "push" ]; then
             # For push events, compare with the before SHA
             echo "Comparing push changes: ${{ github.event.before }}..${{ github.sha }}"
             CHANGED_FILES=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}")
@@ -55,19 +55,15 @@ jobs:
           # Filter for relevant files (environments/**/*.yml but exclude vars.yml)
           RELEVANT_FILES=$(echo "$CHANGED_FILES" | grep -E '^environments/[^/]+/[^/]+/[^/]+\.yml$' | grep -Ev '^.*vars.yml$')
 
-          echo "Relevant changed files: $RELEVANT_FILES"
+          echo "Relevant changed files:"
+          echo "$RELEVANT_FILES"
 
           matrix_json=$(echo "$RELEVANT_FILES" | jq -Rn '[inputs | split("/") | { env: .[1], cluster: .[2], job: (.[3] | split(".") | .[0]) }]')
-          # echo "matrix=$matrix_json" >> $GITHUB_OUTPUT
           {
             echo 'matrix<<EOF'
             echo "$matrix_json"
             echo 'EOF'
           } >> $GITHUB_OUTPUT
-
-      # - name: Set matrix output
-      #   id: set-matrix
-      #   run: echo "matrix=${{ steps.detect-jobs.outputs.matrix }}" >> $GITHUB_OUTPUT
 
   launch-jobs:
     name: Launch Job Templates
@@ -84,10 +80,12 @@ jobs:
         run: |
           echo "ENV=${{ matrix.env }}" >> $GITHUB_ENV
           echo "CLUSTER=${{ matrix.cluster }}" >> $GITHUB_ENV
-          echo "JOB=${{ matrix.job }}" >> $GITHUB_ENV
+          echo "JOB_TEMPLATE=${{ matrix.job }}" >> $GITHUB_ENV
 
-      - name: debug
+      - name: Launch AAP Job Template
+        env:
+          AAP_TOKEN: ${{ secrets.AAP_TOKEN }}
         run: |
           echo "Environment: $ENV"
           echo "Cluster: $CLUSTER"
-          echo "Job: $JOB"
+          echo "Job: $JOB_TEMPLATE"
