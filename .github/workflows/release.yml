@@ -9,12 +9,12 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
-        - 'env/**/*.yml'
+        - 'environments/**/*.yml'
   push:
     branches:
       - main
     paths:
-      - 'env/**/*.yml'
+      - 'environments/**/*.yml'
 
 permissions:
   contents: read
@@ -52,12 +52,12 @@ jobs:
           echo "All changed files:"
           echo "$CHANGED_FILES"
 
-          # Filter for relevant files (env/**/*.yml but exclude vars.yml)
+          # Filter for relevant files (environments/**/*.yml but exclude vars.yml)
           RELEVANT_FILES=$(echo "$CHANGED_FILES" | grep -E '^environments/[^/]+/[^/]+/[^/]+\.yml$' | grep -Ev '^.*vars.yml$')
 
           echo "Relevant changed files: $RELEVANT_FILES"
 
-          matrix_json=$(echo "$changed" | jq -Rn '[inputs | split("/") | { env: .[1], cluster: .[2], job: (.[3] | split(".") | .[0]) }]')
+          matrix_json=$(echo "$RELEVANT_FILES" | jq -Rn '[inputs | split("/") | { env: .[1], cluster: .[2], job: (.[3] | split(".") | .[0]) }]')
           echo "matrix=$matrix_json" >> $GITHUB_OUTPUT
 
       - name: Set matrix output
