@@ -37,7 +37,7 @@ jobs:
           echo "Event: ${{ github.event_name }}"
           echo "Ref: ${{ github.ref }}"
 
-          # Determine the comparison range based on event type
+          # Determine the comparison range based on event type (pull_request or push)
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             # For pull requests, compare against the target branch
             BASE_SHA="${{ github.event.pull_request.base.sha }}"
