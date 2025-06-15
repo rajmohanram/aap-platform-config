@@ -66,7 +66,7 @@ jobs:
           } >> $GITHUB_OUTPUT
 
   launch-jobs:
-    name: Launch Job Templates
+    name: Launch Job
     needs: detect-changes
     runs-on: ubuntu-latest
     strategy:
@@ -76,16 +76,32 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Set environment variables
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: "pip"
+
+      - name: Install Python dependencies
         run: |
-          echo "ENV=${{ matrix.env }}" >> $GITHUB_ENV
-          echo "CLUSTER=${{ matrix.cluster }}" >> $GITHUB_ENV
-          echo "JOB_TEMPLATE=${{ matrix.job }}" >> $GITHUB_ENV
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Ansible collections
+        run: |
+          ansible-galaxy collection install -r requirements.yml
 
       - name: Launch AAP Job Template
         env:
           AAP_TOKEN: ${{ secrets.AAP_TOKEN }}
+          ENV: ${{ matrix.env }}
+          CLUSTER: ${{ matrix.cluster }}
+          JOB_TEMPLATE: ${{ matrix.job }}
         run: |
-          echo "Environment: $ENV"
-          echo "Cluster: $CLUSTER"
-          echo "Job: $JOB_TEMPLATE"
+          ansible-playbook main.yml | tee ansible_playbook.log
+
+      - name: Add ansible-playbook output to summary
+        run: |
+          echo '### Ansible Playbook Output' >> $GITHUB_STEP_SUMMARY
+          cat ansible_playbook.log >> $GITHUB_STEP_SUMMARY
+
