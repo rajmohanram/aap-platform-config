@@ -101,8 +101,11 @@ jobs:
         run: |
           ansible-playbook main.yml
 
-          artifact_filename=$(find . -type f -name "${{ matrix.job }}_*.html") >> $GITHUB_ENV
-          job_id=$(basename "$artifact_filename" | sed 's/.*_\([0-9]*\)\.html/\1/') >> $GITHUB_ENV
+          # Extract job ID and artifact filename and set them as environment variables
+          artifact_filename=$(find . -type f -name "${{ matrix.job }}_*.html")
+          job_id=$(basename "$artifact_filename" | sed 's/.*_\([0-9]*\)\.html/\1/')
+          echo "artifact_filename=${artifact_filename}" >> $GITHUB_ENV
+          echo "job_id=${job_id}" >> $GITHUB_ENV
 
       - name: Upload job output
         if: success()
