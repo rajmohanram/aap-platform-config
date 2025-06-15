@@ -25,7 +25,8 @@
       ansible.builtin.include_role:
         name: infra.aap_configuration.controller_job_launch
       vars:
-        name: "{{ job_template }}"
-        organization: "{{ organization }}"
-        extra_vars: "{{ extra_vars }}"
-        wait: true
+        controller_launch_jobs:
+          - name: "{{ job_template }}"
+            organization: "{{ organization }}"
+            extra_vars: "{{ extra_vars }}"
+            wait: true

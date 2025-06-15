@@ -21,6 +21,7 @@ permissions:
 
 jobs:
   detect-changes:
+    name: Detect Changes
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.detect-jobs.outputs.matrix }}
