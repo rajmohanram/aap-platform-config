@@ -28,8 +28,7 @@ jobs:
       - name: Detect jobs with changes
         id: detect-jobs
         run: |
-          changed_files=$(git diff --name-only HEAD~1)
-          changed=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '^env/[^/]+/(mgmt|wkld)/[^/]+\\.yml$' | sed -E 's|env/([^/]+)/([^/]+)/([^.]+)\\.yml|\1:\2:\3|' | sort -u)
+          changed=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '^environments/[^/]+/(mgmt|wkld)/[^/]+\\.yml$' | sed -E 's|env/([^/]+)/([^/]+)/([^.]+)\\.yml|\1:\2:\3|' | sort -u)
           matrix_json=$(echo "$changed" | jq -Rn '[inputs | split(":") | { env: .[0], cluster: .[1], job: .[2] }]')
           echo "matrix=$matrix_json" >> $GITHUB_OUTPUT
 
