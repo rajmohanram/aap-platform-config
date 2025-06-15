@@ -3,15 +3,11 @@
   hosts: localhost
   connection: local
   gather_facts: false
-  vars:
-    env: "{{ lookup('env', 'ENV') }}"
-    cluster: "{{ lookup('env', 'CLUSTER') }}"
-    job_template: "{{ lookup('env', 'JOB_TEMPLATE') }}"
   vars_files:
     - "common/vars.yml"
     - "environments/{{ env }}/{{ cluster }}/vars.yml"
 
-  tasks:
+  pre_tasks:
     - name: "Ensure required variables are set"
       ansible.builtin.assert:
         that:
@@ -23,14 +19,17 @@
     - name: Include vars for the job template
       ansible.builtin.include_vars:
         file: "environments/{{ env }}/{{ cluster }}/{{ job_template }}.yml"
-        name: extra_vars
+        name: job_extra_vars
 
-    - name: "Launch AAP Job Template {{ job_template }}"
-      ansible.builtin.include_role:
-        name: infra.aap_configuration.controller_job_launch
+    - name: Debug variables
+      ansible.builtin.debug:
+        var: vars
+
+  roles:
+    - role: infra.aap_configuration.controller_job_launch
       vars:
         controller_launch_jobs:
           - name: "{{ job_template }}"
             organization: "{{ organization }}"
-            extra_vars: "{{ extra_vars }}"
+            extra_vars: "{{ job_extra_vars }}"
             wait: true

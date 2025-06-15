@@ -13,3 +13,8 @@ project_name: "rlabs-project"
 
 # Inventory
 inventory_name: "rlabs-inventory"
+
+# Job Template
+env: "{{ lookup('env', 'ENV') }}"
+cluster: "{{ lookup('env', 'CLUSTER') }}"
+job_template: "{{ lookup('env', 'JOB_TEMPLATE') }}"
