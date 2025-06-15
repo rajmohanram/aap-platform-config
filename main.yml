@@ -1,0 +1,18 @@
+---
+- name: Launch AAP Job Template
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - "common/vars.yml"
+    - "dev/{{ env }}/{{ cluster }}/vars.yml"
+
+  tasks:
+    - name: Launching job {{ job_template }} for {{ env }} -  {{ cluster }} environment
+      ansible.builtin.include_role:
+        name: infra.aap_configuration.controller_job_launch
+      vars:
+        name: "{{ job_template }}"
+        organization: "{{ organization }}"
+        extra_vars: "{{ extra_vars | default({}) }}"
+        wait: true

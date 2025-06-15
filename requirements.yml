@@ -1,0 +1,6 @@
+---
+collections:
+  - name: infra.aap_configuration
+    version: "3.3.0"
+  - name: ./offline_collections/ansible-controller-4.4.0.tar.gz
+    type: file

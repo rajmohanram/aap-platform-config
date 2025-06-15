@@ -1,0 +1,5 @@
+---
+# vCenter variables
+vcenter_url: "https://vcenter-mgmt.dev.example.com"
+vcenter_username: "administrator@vsphere.local"
+vcenter_password: "{{ lookup('env', 'VCENTER_PASSWORD') }}"
