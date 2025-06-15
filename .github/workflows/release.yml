@@ -1,0 +1,58 @@
+---
+name: Release
+
+run-name: >
+  ${{ github.workflow }} - Launch AAP Job Templates
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  detect-changes:
+    name: Detect changed job files
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Detect jobs with changes
+        id: detect-jobs
+        run: |
+          changed=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '^env/[^/]+/(mgmt|wkld)/[^/]+\\.yml$' | sed -E 's|env/([^/]+)/([^/]+)/([^.]+)\\.yml|\1:\2:\3|' | sort -u)
+          matrix_json=$(echo "$changed" | jq -Rn '[inputs | split(":") | { env: .[0], cluster: .[1], job: .[2] }]')
+          echo "matrix=$matrix_json" >> $GITHUB_OUTPUT
+
+      - name: Set matrix output
+        id: set-matrix
+        run: echo "matrix=${{ steps.detect-jobs.outputs.matrix }}" >> $GITHUB_OUTPUT
+
+  launch-jobs:
+    name: Launch Job Templates
+    needs: detect-changes
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set environment variables
+        run: |
+          echo "ENV=${{ matrix.env }}" >> $GITHUB_ENV
+          echo "CLUSTER=${{ matrix.cluster }}" >> $GITHUB_ENV
+          echo "JOB=${{ matrix.job }}" >> $GITHUB_ENV
+
+      - name: debug
+        run: |
+          echo "Environment: $ENV"
+          echo "Cluster: $CLUSTER"
+          echo "Job: $JOB"
