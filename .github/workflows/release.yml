@@ -9,7 +9,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
-        - 'environments/**/*.yml'
+      - 'environments/**/*.yml'
   push:
     branches:
       - main
@@ -105,4 +105,3 @@ jobs:
         run: |
           echo '### Ansible Playbook Output' >> $GITHUB_STEP_SUMMARY
           cat ansible_playbook.log >> $GITHUB_STEP_SUMMARY
-

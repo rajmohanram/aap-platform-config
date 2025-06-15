@@ -7,7 +7,6 @@
     env: "{{ lookup('env', 'ENV') }}"
     cluster: "{{ lookup('env', 'CLUSTER') }}"
     job_template: "{{ lookup('env', 'JOB_TEMPLATE') }}"
-    extra_vars: "{{ lookup('file', 'environments/' + env + '/' + cluster + '/' + job_template + '.yml') | from_yaml }}"
   vars_files:
     - "common/vars.yml"
     - "environments/{{ env }}/{{ cluster }}/vars.yml"
@@ -21,7 +20,12 @@
           - job_template is defined
         fail_msg: "Environment, cluster, and job template must be specified."
 
-    - name: "Launch AAP Job Template {{ job_template }} for {{ env }} in cluster {{ cluster }}"
+    - name: Include vars for the job template
+      ansible.builtin.include_vars:
+        file: "environments/{{ env }}/{{ cluster }}/{{ job_template }}.yml"
+        name: extra_vars
+
+    - name: "Launch AAP Job Template {{ job_template }}"
       ansible.builtin.include_role:
         name: infra.aap_configuration.controller_job_launch
       vars:
