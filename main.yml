@@ -10,7 +10,7 @@
     extra_vars: "{{ lookup('file', 'environments/' + env + '/' + cluster + '/' + job_template + '.yml') | from_yaml }}"
   vars_files:
     - "common/vars.yml"
-    - "dev/{{ env }}/{{ cluster }}/vars.yml"
+    - "environments/{{ env }}/{{ cluster }}/vars.yml"
 
   tasks:
     - name: "Ensure required variables are set"
