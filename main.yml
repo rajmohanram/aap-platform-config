@@ -29,10 +29,6 @@
       ansible.builtin.set_fact:
         job_extra_vars: "{{ job_vars | default({}) | combine(cluster_vars | default({})) }}"
 
-    - name: Debug variables
-      ansible.builtin.debug:
-        var: vars
-
   roles:
     - role: infra.aap_configuration.controller_job_launch
       vars:
@@ -41,3 +37,34 @@
             organization: "{{ organization }}"
             extra_vars: "{{ job_extra_vars }}"
             wait: true
+
+  post_tasks:
+    # - name: Debug job launch result
+    #   ansible.builtin.debug:
+    #     var: launched_controller_jobs
+
+    - name: Ensure job launch was successful
+      ansible.builtin.assert:
+        that:
+          - launched_controller_jobs.results[0].status == 'successful'
+          - launched_controller_jobs.results[0].failed == false
+        fail_msg: "{{ job_template | title }} job launch failed or did not complete successfully."
+        success_msg: "{{ job_template | title }} job with id '{{ launched_controller_jobs.results[0].id }}' launched and completed successfully."
+      when: launched_controller_jobs is defined
+
+    - name: Download job output
+      ansible.builtin.uri:
+        url: "{{ aap_hostname }}/api/v2/jobs/{{ launched_controller_jobs.results[0].id }}/stdout/?format=html"
+        validate_certs: "{{ aap_validate_certs | default(false) }}"
+        method: GET
+        headers:
+          Authorization: "Bearer {{ aap_token }}"
+        return_content: true
+      register: job_output
+
+    - name: Save job output to file
+      ansible.builtin.copy:
+        content: "{{ job_output.content }}"
+        dest: "{{ job_template }}_{{ launched_controller_jobs.results[0].id }}.html"
+        mode: '0644'
+      when: job_output is defined and job_output.content is not none

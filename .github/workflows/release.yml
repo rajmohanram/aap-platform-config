@@ -99,9 +99,14 @@ jobs:
           CLUSTER: ${{ matrix.cluster }}
           JOB_TEMPLATE: ${{ matrix.job }}
         run: |
-          ansible-playbook main.yml | tee ansible_playbook.log
+          ansible-playbook main.yml
 
-      - name: Add ansible-playbook output to summary
-        run: |
-          echo '### Ansible Playbook Output' >> $GITHUB_STEP_SUMMARY
-          cat ansible_playbook.log >> $GITHUB_STEP_SUMMARY
+          artifact_filename=$(find . -type f -name "${{ matrix.job }}_*.html") >> $GITHUB_ENV
+          job_id=$(basename "$artifact_filename" | sed 's/.*_\([0-9]*\)\.html/\1/') >> $GITHUB_ENV
+
+      - name: Upload job output
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: job-output-${{ matrix.env }}-${{ matrix.cluster }}-${{ matrix.job }}-${{ env.job_id }}
+          path: "${{ env.artifact_filename }}"
