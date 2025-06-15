@@ -5,7 +5,6 @@
   gather_facts: false
   vars_files:
     - "common/vars.yml"
-    - "environments/{{ env }}/{{ cluster }}/vars.yml"
 
   pre_tasks:
     - name: "Ensure required variables are set"
@@ -16,10 +15,19 @@
           - job_template is defined
         fail_msg: "Environment, cluster, and job template must be specified."
 
-    - name: Include vars for the job template
+    - name: Include cluster environment variables
+      ansible.builtin.include_vars:
+        file: "environments/{{ env }}/{{ cluster }}/vars.yml"
+        name: cluster_vars
+
+    - name: Include job template variables
       ansible.builtin.include_vars:
         file: "environments/{{ env }}/{{ cluster }}/{{ job_template }}.yml"
-        name: job_extra_vars
+        name: job_vars
+
+    - name: Set job extra vars
+      ansible.builtin.set_fact:
+        job_extra_vars: "{{ job_vars | default({}) | combine(cluster_vars | default({})) }}"
 
     - name: Debug variables
       ansible.builtin.debug:
