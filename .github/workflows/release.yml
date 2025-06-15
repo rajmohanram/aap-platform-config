@@ -23,7 +23,7 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      matrix: ${{ steps.detect-jobs.outputs.matrix }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -58,11 +58,16 @@ jobs:
           echo "Relevant changed files: $RELEVANT_FILES"
 
           matrix_json=$(echo "$RELEVANT_FILES" | jq -Rn '[inputs | split("/") | { env: .[1], cluster: .[2], job: (.[3] | split(".") | .[0]) }]')
-          echo "matrix=$matrix_json" >> $GITHUB_OUTPUT
+          # echo "matrix=$matrix_json" >> $GITHUB_OUTPUT
+          {
+            echo 'matrix<<EOF'
+            echo "$matrix_json"
+            echo 'EOF'
+          } >> $GITHUB_OUTPUT
 
-      - name: Set matrix output
-        id: set-matrix
-        run: echo "matrix=${{ steps.detect-jobs.outputs.matrix }}" >> $GITHUB_OUTPUT
+      # - name: Set matrix output
+      #   id: set-matrix
+      #   run: echo "matrix=${{ steps.detect-jobs.outputs.matrix }}" >> $GITHUB_OUTPUT
 
   launch-jobs:
     name: Launch Job Templates
